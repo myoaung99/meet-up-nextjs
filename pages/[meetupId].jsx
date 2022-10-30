@@ -1,6 +1,9 @@
 import React from "react";
 import { useRouter } from "next/router";
+import Meetup from './../model/Meetup'
+import Head from 'next/head'
 import MeetupDetail from "../components/meetups/MeetupDetail";
+import connectMongoose from "../utils/connect-database";
 
 const MeetupDetailPage = (props) => {
   const { id, title, image, address, description } = props;
@@ -8,6 +11,12 @@ const MeetupDetailPage = (props) => {
   const { meetupId } = router.query;
 
   return (
+      <>
+        <Head>
+          <title>{title}</title>
+          <meta name="description" content={description}/>
+        </Head>
+
     <MeetupDetail
       id={id}
       title={title}
@@ -15,29 +24,32 @@ const MeetupDetailPage = (props) => {
       address={address}
       description={description}
     />
+      </>
   );
 };
 
 export default MeetupDetailPage;
 
 export async function getStaticPaths() {
+  await connectMongoose();
+  const meetups = await Meetup.find({}, {_id: 1});
   return {
-    paths: [{ params: { meetupId: "m1" } }, { params: { meetupId: "m2" } }],
+    paths: meetups.map(meetup=>({params: {meetupId: meetup._id.toString()}})),
     fallback: false,
   };
 }
 
 export async function getStaticProps(context) {
   const { meetupId } = context.params;
-  //* fetch data from databases
+  await connectMongoose();
+  const meetup = await Meetup.findOne({_id: meetupId}, );
   return {
     props: {
-      id: meetupId,
-      title: "First Meetup",
-      image:
-        "https://q-xx.bstatic.com/xdata/images/hotel/840x460/254415687.jpg?k=47ed904fa4d426dad09e67eac7a7544b37be6ceaa2baa7f5b98b3b54eb958f39&o=",
-      address: "Some street 4, Some City",
-      description: "This is some description",
+      id: meetup._id.toString(),
+      title: meetup.title,
+      image: meetup.image,
+      address: meetup.address,
+      description: meetup.description,
     },
   };
 }

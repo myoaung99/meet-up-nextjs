@@ -27,7 +27,7 @@ function NewMeetupForm(props) {
     };
 
     props.onAddMeetup(meetupData);
-    router.back();
+    router.replace('/');
   }
 
   return (
